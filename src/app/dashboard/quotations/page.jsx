@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function QuotationsPage() {
     const [quotations, setQuotations] = useState([]);
@@ -230,18 +231,20 @@ export default function QuotationsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Customer</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.customer_id}
                             onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
-                        >
-                            <option value="">Walk-in / Unknown Customer</option>
-                            {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name} ({c.phone || 'No phone'})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Walk-in / Unknown Customer"
+                            options={[
+                                { value: '', label: 'Walk-in / Unknown Customer' },
+                                ...customers.map((c) => ({
+                                    value: c.id,
+                                    label: c.name,
+                                    sublabel: c.phone ? `(${c.phone})` : null,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -281,19 +284,21 @@ export default function QuotationsPage() {
                         {form.items.map((it, idx) => (
                             <div key={idx} className="p-2.5 mb-2 bg-gray-50 border border-gray-200 rounded-lg">
                                 <div className="mb-2">
-                                    <select
-                                        className="access-input text-xs"
+                                    <Select2
+                                        size="sm"
                                         value={it.product_id}
                                         onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
+                                        placeholder="Select Product"
                                         required
-                                    >
-                                        <option value="">Select Product</option>
-                                        {products.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} (SKU: {p.sku})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        options={[
+                                            { value: '', label: 'Select Product' },
+                                            ...products.map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                                sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                            })),
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex-1">

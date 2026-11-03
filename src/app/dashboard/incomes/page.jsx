@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function IncomesPage() {
     const [incomes, setIncomes] = useState([]);
@@ -136,18 +137,16 @@ export default function IncomesPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Income Category</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.income_category_id}
                             onChange={(e) => setForm({ ...form, income_category_id: e.target.value })}
-                        >
-                            <option value="">General Income</option>
-                            {categories.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="General Income"
+                            options={[
+                                { value: '', label: 'General Income' },
+                                ...categories.map((c) => ({ value: c.id, label: c.name })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -163,16 +162,17 @@ export default function IncomesPage() {
                         </label>
                         <label className="block">
                             <span className="block text-xs font-bold text-gray-700 mb-1">Payment Method</span>
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={form.payment_method}
                                 onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-                            >
-                                <option value="cash">Cash In Hand</option>
-                                <option value="bank">Bank Transfer</option>
-                                <option value="card">Card / POS</option>
-                                <option value="bkash">bKash / Nagad</option>
-                            </select>
+                                options={[
+                                    { value: 'cash', label: 'Cash In Hand' },
+                                    { value: 'bank', label: 'Bank Transfer' },
+                                    { value: 'card', label: 'Card / POS' },
+                                    { value: 'bkash', label: 'bKash / Nagad' },
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
                     </div>
 

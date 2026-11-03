@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function PaymentsPage() {
     const [payments, setPayments] = useState([]);
@@ -92,34 +93,29 @@ export default function PaymentsPage() {
 
                     <label>
                         Sale Invoice *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.sale}
                             onChange={(e) => {
-                                const selected = sales.find((s) => String(s.id) === String(e.target.value));
+                                const val = e.target.value;
+                                const selected = sales.find((s) => String(s.id) === String(val));
                                 setForm({
                                     ...form,
-                                    sale: e.target.value,
+                                    sale: val,
                                     amount: selected ? selected.due_amount : '',
                                 });
                             }}
                             required
-                        >
-                            <option value="">Select an invoice</option>
-                            {dueSales.length > 0 ? (
-                                dueSales.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.invoice_number} — Due: ৳{s.due_amount} ({s.customer?.name || 'Walk-in'})
-                                    </option>
-                                ))
-                            ) : (
-                                sales.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.invoice_number} (৳{s.total || s.grand_total})
-                                    </option>
-                                ))
-                            )}
-                        </select>
+                            placeholder="Select an invoice"
+                            options={[
+                                { value: '', label: 'Select an invoice' },
+                                ...(dueSales.length > 0 ? dueSales : sales).map((s) => ({
+                                    value: s.id,
+                                    label: `${s.invoice_number} — Due: ৳${s.due_amount || s.total || s.grand_total}`,
+                                    sublabel: s.customer?.name ? `(${s.customer.name})` : '(Walk-in)',
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>
@@ -138,16 +134,17 @@ export default function PaymentsPage() {
 
                     <label>
                         Payment Method *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.method}
                             onChange={(e) => setForm({ ...form, method: e.target.value })}
                             required
-                        >
-                            <option value="cash">Cash</option>
-                            <option value="card">Card</option>
-                            <option value="mobile_banking">Mobile Banking (bKash/Nagad)</option>
-                        </select>
+                            options={[
+                                { value: 'cash', label: 'Cash' },
+                                { value: 'card', label: 'Card' },
+                                { value: 'mobile_banking', label: 'Mobile Banking (bKash/Nagad)' },
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>

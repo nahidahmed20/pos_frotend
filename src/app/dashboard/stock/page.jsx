@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function StockPage() {
     const [activeTab, setActiveTab] = useState('stock'); // 'stock' | 'movements' | 'batches'
@@ -374,35 +375,35 @@ export default function StockPage() {
 
                         <label>
                             Product *
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={stockForm.product_id}
                                 onChange={(e) => setStockForm({ ...stockForm, product_id: e.target.value })}
                                 required
-                            >
-                                <option value="">Select product</option>
-                                {products.map((p) => (
-                                    <option value={p.id} key={p.id}>
-                                        {p.name} ({p.sku})
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select product"
+                                options={[
+                                    { value: '', label: 'Select product' },
+                                    ...products.map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                        sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                    })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>
                             Branch (Optional)
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={stockForm.branch_id}
                                 onChange={(e) => setStockForm({ ...stockForm, branch_id: e.target.value })}
-                            >
-                                <option value="">Current Branch (Default)</option>
-                                {branches.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Current Branch (Default)"
+                                options={[
+                                    { value: '', label: 'Current Branch (Default)' },
+                                    ...branches.map((b) => ({ value: b.id, label: b.name })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>
@@ -567,19 +568,21 @@ export default function StockPage() {
 
                         <label>
                             Product *
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={movementForm.product_id}
                                 onChange={(e) => setMovementForm({ ...movementForm, product_id: e.target.value })}
                                 required
-                            >
-                                <option value="">Select product</option>
-                                {products.map((p) => (
-                                    <option value={p.id} key={p.id}>
-                                        {p.name} ({p.sku})
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select product"
+                                options={[
+                                    { value: '', label: 'Select product' },
+                                    ...products.map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                        sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                    })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>
@@ -596,18 +599,16 @@ export default function StockPage() {
 
                         <label>
                             Branch (Optional)
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={movementForm.branch_id}
                                 onChange={(e) => setMovementForm({ ...movementForm, branch_id: e.target.value })}
-                            >
-                                <option value="">Current Branch</option>
-                                {branches.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Current Branch"
+                                options={[
+                                    { value: '', label: 'Current Branch' },
+                                    ...branches.map((b) => ({ value: b.id, label: b.name })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>
@@ -754,19 +755,21 @@ export default function StockPage() {
 
                         <label>
                             Product *
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={batchForm.product_id}
                                 onChange={(e) => setBatchForm({ ...batchForm, product_id: e.target.value })}
                                 required
-                            >
-                                <option value="">Select expiry-tracked product</option>
-                                {products.map((p) => (
-                                    <option value={p.id} key={p.id}>
-                                        {p.name} {p.has_expiry ? '(Expiry)' : ''}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select expiry-tracked product"
+                                options={[
+                                    { value: '', label: 'Select expiry-tracked product' },
+                                    ...products.map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                        sublabel: p.has_expiry ? '(Expiry-tracked)' : null,
+                                    })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>

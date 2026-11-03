@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function ReturnsPage() {
     const [returns, setReturns] = useState([]);
@@ -199,19 +200,21 @@ export default function ReturnsPage() {
 
                     <label>
                         Original Sale *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.sale_id}
                             onChange={(e) => handleSaleChange(e.target.value)}
                             required
-                        >
-                            <option value="">Select sale invoice</option>
-                            {sales.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.invoice_number} — {s.customer?.name || 'Walk-in'} (৳{s.total || s.grand_total})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select sale invoice"
+                            options={[
+                                { value: '', label: 'Select sale invoice' },
+                                ...sales.map((s) => ({
+                                    value: s.id,
+                                    label: `${s.invoice_number} — ${s.customer?.name || 'Walk-in'}`,
+                                    sublabel: `(৳${s.total || s.grand_total})`,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>
@@ -240,15 +243,16 @@ export default function ReturnsPage() {
                         </label>
                         <label>
                             Refund Method
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={form.refund_method}
                                 onChange={(e) => setForm({ ...form, refund_method: e.target.value })}
-                            >
-                                <option value="cash">Cash</option>
-                                <option value="card">Card</option>
-                                <option value="mobile_banking">Mobile Banking</option>
-                            </select>
+                                options={[
+                                    { value: 'cash', label: 'Cash' },
+                                    { value: 'card', label: 'Card' },
+                                    { value: 'mobile_banking', label: 'Mobile Banking' },
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
                     </div>
 
@@ -300,19 +304,21 @@ export default function ReturnsPage() {
                                     </div>
 
                                     {availableItems.length > 0 ? (
-                                        <select
-                                            className="access-input text-xs"
+                                        <Select2
+                                            size="sm"
                                             value={it.sale_item_id}
                                             onChange={(e) => updateItem(idx, 'sale_item_id', e.target.value)}
                                             required
-                                        >
-                                            <option value="">Choose item from this sale</option>
-                                            {availableItems.map((ai) => (
-                                                <option key={ai.id} value={ai.id}>
-                                                    {ai.product?.name || `Item #${ai.id}`} (Sold: {ai.quantity})
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder="Choose item from this sale"
+                                            options={[
+                                                { value: '', label: 'Choose item from this sale' },
+                                                ...availableItems.map((ai) => ({
+                                                    value: ai.id,
+                                                    label: ai.product?.name || `Item #${ai.id}`,
+                                                    sublabel: `(Sold: ${ai.quantity})`,
+                                                })),
+                                            ]}
+                                        />
                                     ) : (
                                         <input
                                             className="access-input text-xs"

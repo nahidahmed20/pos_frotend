@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from '@/lib/axios';
 import Link from 'next/link';
+import Select2 from '@/components/Select2';
 
 export default function PosPage() {
     // Master data
@@ -1241,18 +1242,21 @@ export default function PosPage() {
                                                 <i className="ti ti-plus" /> New (F2)
                                             </button>
                                         </div>
-                                        <select
-                                            className="w-full text-xs py-2 px-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-gray-800 focus:bg-white focus:border-primary outline-none"
+                                        <Select2
+                                            size="sm"
                                             value={customerId}
                                             onChange={(e) => setCustomerId(e.target.value)}
-                                        >
-                                            <option value="">Walk-in Customer (নগদ ক্রেতা)</option>
-                                            {customers.map((c) => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.name} {c.phone ? `(${c.phone})` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder="Walk-in Customer (নগদ ক্রেতা)"
+                                            searchPlaceholder="Search customer by name or phone..."
+                                            options={[
+                                                { value: '', label: 'Walk-in Customer (নগদ ক্রেতা)' },
+                                                ...customers.map((c) => ({
+                                                    value: c.id,
+                                                    label: c.name,
+                                                    sublabel: c.phone ? `(${c.phone})` : null,
+                                                })),
+                                            ]}
+                                        />
                                     </div>
 
                                     {/* Cart Line Items */}

@@ -13,12 +13,19 @@ export default function ChatPage() {
 
     const loadData = async (user = selectedUser) => {
         try {
-            const [usersRes, msgRes] = await Promise.all([
-                axios.get('/api/users'),
+            const [usersRes, msgRes] = await Promise.allSettled([
+                axios.get('/api/chat/users').catch(() => axios.get('/api/users')),
                 axios.get(user ? `/api/chat/messages?user_id=${user.id}` : '/api/chat/messages'),
             ]);
-            setUsers(usersRes.data || []);
-            setMessages(msgRes.data.data || []);
+
+            if (usersRes.status === 'fulfilled') {
+                const uData = usersRes.value?.data?.data ?? usersRes.value?.data;
+                setUsers(Array.isArray(uData) ? uData : []);
+            }
+            if (msgRes.status === 'fulfilled') {
+                const mData = msgRes.value?.data?.data ?? msgRes.value?.data;
+                setMessages(Array.isArray(mData) ? mData : []);
+            }
         } catch {
             // silent catch
         } finally {
@@ -77,7 +84,7 @@ export default function ChatPage() {
                         <i className="ti ti-messages text-base" /> All Team Stream
                     </div>
                     <div className="space-y-1 overflow-y-auto flex-1">
-                        {users.map((u) => (
+                        {(Array.isArray(users) ? users : []).map((u) => (
                             <div
                                 key={u.id}
                                 onClick={() => setSelectedUser(u)}
@@ -91,7 +98,7 @@ export default function ChatPage() {
                                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
                                     <span>{u.name}</span>
                                 </div>
-                                <span className="text-[10px] text-gray-400">{u.role || 'Staff'}</span>
+                                <span className="text-[10px] text-gray-400">{u.role || u.roles?.[0]?.name || 'Staff'}</span>
                             </div>
                         ))}
                     </div>
@@ -119,7 +126,7 @@ export default function ChatPage() {
                                 No messages yet. Say hello to your team!
                             </div>
                         ) : (
-                            messages.map((m) => (
+                            (Array.isArray(messages) ? messages : []).map((m) => (
                                 <div key={m.id} className="flex flex-col text-xs">
                                     <div className="flex items-baseline gap-2 mb-0.5">
                                         <strong className="text-gray-900 font-bold">{m.sender?.name || 'User'}</strong>

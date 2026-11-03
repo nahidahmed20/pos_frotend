@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function CrudWorkspace({
     title,
@@ -180,19 +181,14 @@ export default function CrudWorkspace({
                                     {field.label} {field.required && <span className="text-red-500">*</span>}
                                 </span>
                                 {field.type === 'select' ? (
-                                    <select
-                                        className="access-input"
+                                    <Select2
                                         value={form[field.name] ?? ''}
                                         onChange={(event) => setForm({ ...form, [field.name]: event.target.value })}
                                         required={field.required}
-                                    >
-                                        <option value="">Select {field.label}</option>
-                                        {field.options?.map((option) => (
-                                            <option value={option.value} key={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder={`Select ${field.label}`}
+                                        options={field.options || []}
+                                        className="mt-1"
+                                    />
                                 ) : field.type === 'textarea' ? (
                                     <textarea
                                         className="access-input min-h-[74px]"
@@ -276,6 +272,7 @@ export default function CrudWorkspace({
                             <table className="resource-table">
                                 <thead>
                                     <tr>
+                                        <th className="w-12 text-center">SL</th>
                                         {columns.map((column) => (
                                             <th key={column.key}>{column.label}</th>
                                         ))}
@@ -283,11 +280,14 @@ export default function CrudWorkspace({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {paginatedItems.map((item) => (
-                                        <tr key={item.id}>
-                                            {columns.map((column) => (
-                                                <td key={column.key}>{mapRow(item, column.key)}</td>
-                                            ))}
+                                    {paginatedItems.map((item, idx) => {
+                                        const sl = (pageSize === -1 ? 0 : (currentPage - 1) * pageSize) + idx + 1;
+                                        return (
+                                            <tr key={item.id}>
+                                                <td className="text-center font-bold text-slate-500">{sl}</td>
+                                                {columns.map((column) => (
+                                                    <td key={column.key}>{mapRow(item, column.key)}</td>
+                                                ))}
                                             {!readOnly && (
                                                 <td className="text-right whitespace-nowrap">
                                                     <button
@@ -311,7 +311,8 @@ export default function CrudWorkspace({
                                                 </td>
                                             )}
                                         </tr>
-                                    ))}
+                                    );
+                                })}
                                 </tbody>
                             </table>
                             {filteredItems.length === 0 && (

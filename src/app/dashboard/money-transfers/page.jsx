@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function MoneyTransfersPage() {
     const [transfers, setTransfers] = useState([]);
@@ -110,38 +111,42 @@ export default function MoneyTransfersPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">From Account (Debit) *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.from_account_id}
                             onChange={(e) => setForm({ ...form, from_account_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Source Account</option>
-                            {accounts.map((acc) => (
-                                <option key={acc.id} value={acc.id}>
-                                    {acc.name} (Balance: ৳{parseFloat(acc.current_balance || 0).toLocaleString()})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Source Account"
+                            options={[
+                                { value: '', label: 'Select Source Account' },
+                                ...accounts.map((acc) => ({
+                                    value: acc.id,
+                                    label: acc.name,
+                                    sublabel: `(Balance: ৳${parseFloat(acc.current_balance || 0).toLocaleString()})`,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">To Account (Credit) *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.to_account_id}
                             onChange={(e) => setForm({ ...form, to_account_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Destination Account</option>
-                            {accounts
-                                .filter((acc) => acc.id !== parseInt(form.from_account_id, 10))
-                                .map((acc) => (
-                                    <option key={acc.id} value={acc.id}>
-                                        {acc.name} (Balance: ৳{parseFloat(acc.current_balance || 0).toLocaleString()})
-                                    </option>
-                                ))}
-                        </select>
+                            placeholder="Select Destination Account"
+                            options={[
+                                { value: '', label: 'Select Destination Account' },
+                                ...accounts
+                                    .filter((acc) => acc.id !== parseInt(form.from_account_id, 10))
+                                    .map((acc) => ({
+                                        value: acc.id,
+                                        label: acc.name,
+                                        sublabel: `(Balance: ৳${parseFloat(acc.current_balance || 0).toLocaleString()})`,
+                                    })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">

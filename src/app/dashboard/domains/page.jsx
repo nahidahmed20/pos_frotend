@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function DomainsPage() {
     const [domains, setDomains] = useState([]);
@@ -94,19 +95,17 @@ export default function DomainsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Company *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.company_id}
                             onChange={(e) => setForm({ ...form, company_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Tenant Company</option>
-                            {companies.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Tenant Company"
+                            options={[
+                                { value: '', label: 'Select Tenant Company' },
+                                ...companies.map((c) => ({ value: c.id, label: c.name })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-3">
@@ -123,15 +122,16 @@ export default function DomainsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Verification Status</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.status}
                             onChange={(e) => setForm({ ...form, status: e.target.value })}
-                        >
-                            <option value="pending">Pending DNS Verification</option>
-                            <option value="approved">Approved & Active</option>
-                            <option value="rejected">Rejected / Misconfigured</option>
-                        </select>
+                            options={[
+                                { value: 'pending', label: 'Pending DNS Verification' },
+                                { value: 'approved', label: 'Approved & Active' },
+                                { value: 'rejected', label: 'Rejected / Misconfigured' },
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-4">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function PurchaseTransactionsPage() {
     const [transactions, setTransactions] = useState([]);

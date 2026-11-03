@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function PurchaseOrdersPage() {
     const [orders, setOrders] = useState([]);
@@ -165,19 +166,21 @@ export default function PurchaseOrdersPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Supplier *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.supplier_id}
                             onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Supplier</option>
-                            {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name} ({s.phone || 'No phone'})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Supplier"
+                            options={[
+                                { value: '', label: 'Select Supplier' },
+                                ...suppliers.map((s) => ({
+                                    value: s.id,
+                                    label: s.name,
+                                    sublabel: s.phone ? `(${s.phone})` : null,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -217,19 +220,21 @@ export default function PurchaseOrdersPage() {
                         {form.items.map((it, idx) => (
                             <div key={idx} className="p-2.5 mb-2 bg-gray-50 border border-gray-200 rounded-lg">
                                 <div className="mb-2">
-                                    <select
-                                        className="access-input text-xs"
+                                    <Select2
+                                        size="sm"
                                         value={it.product_id}
                                         onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
                                         required
-                                    >
-                                        <option value="">Select Product</option>
-                                        {products.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} (SKU: {p.sku})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="Select Product"
+                                        options={[
+                                            { value: '', label: 'Select Product' },
+                                            ...products.map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                                sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                            })),
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex-1">

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 const initialForm = {
     name: '',
@@ -345,19 +346,21 @@ export default function ProductVariantsPage() {
 
                     <label>
                         Parent Product *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={productId}
                             onChange={(e) => handleProductChange(e.target.value)}
                             required
-                        >
-                            <option value="">Choose parent product</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} ({p.sku})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Choose parent product"
+                            options={[
+                                { value: '', label: 'Choose parent product' },
+                                ...products.map((p) => ({
+                                    value: p.id,
+                                    label: p.name,
+                                    sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>

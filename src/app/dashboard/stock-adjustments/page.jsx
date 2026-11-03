@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function StockAdjustmentsPage() {
     const [adjustments, setAdjustments] = useState([]);
@@ -190,18 +191,20 @@ export default function StockAdjustmentsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Reason</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.reason}
                             onChange={(e) => setForm({ ...form, reason: e.target.value })}
                             required
-                        >
-                            <option value="audit">Inventory Audit Discrepancy</option>
-                            <option value="damaged">Damaged Goods</option>
-                            <option value="lost">Lost / Stolen</option>
-                            <option value="expired">Expired Stock</option>
-                            <option value="other">Other</option>
-                        </select>
+                            placeholder="Select reason"
+                            options={[
+                                { value: 'audit', label: 'Inventory Audit Discrepancy' },
+                                { value: 'damaged', label: 'Damaged Goods' },
+                                { value: 'lost', label: 'Lost / Stolen' },
+                                { value: 'expired', label: 'Expired Stock' },
+                                { value: 'other', label: 'Other' },
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="mb-4">
@@ -220,29 +223,32 @@ export default function StockAdjustmentsPage() {
                             <div key={idx} className="p-2.5 mb-2 bg-gray-50 border border-gray-200 rounded-lg">
                                 <div className="grid grid-cols-2 gap-2 mb-2">
                                     <div>
-                                        <select
-                                            className="access-input text-xs"
+                                        <Select2
+                                            size="sm"
                                             value={item.product_id}
                                             onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
                                             required
-                                        >
-                                            <option value="">Select Product</option>
-                                            {products.map((p) => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.name} ({p.sku})
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder="Select Product"
+                                            options={[
+                                                { value: '', label: 'Select Product' },
+                                                ...products.map((p) => ({
+                                                    value: p.id,
+                                                    label: p.name,
+                                                    sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                                })),
+                                            ]}
+                                        />
                                     </div>
                                     <div>
-                                        <select
-                                            className="access-input text-xs font-bold"
+                                        <Select2
+                                            size="sm"
                                             value={item.type}
                                             onChange={(e) => updateItemRow(idx, 'type', e.target.value)}
-                                        >
-                                            <option value="subtraction">➖ Deduct (Stock Out)</option>
-                                            <option value="addition">➕ Add (Stock In)</option>
-                                        </select>
+                                            options={[
+                                                { value: 'subtraction', label: '➖ Deduct (Stock Out)' },
+                                                { value: 'addition', label: '➕ Add (Stock In)' },
+                                            ]}
+                                        />
                                     </div>
                                 </div>
 

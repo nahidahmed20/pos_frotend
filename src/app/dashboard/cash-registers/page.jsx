@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function CashRegistersPage() {
     const [tab, setTab] = useState('terminals'); // 'terminals' | 'sessions'
@@ -286,21 +287,23 @@ export default function CashRegistersPage() {
 
                         <label>
                             Select Register *
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={sessionForm.cash_register_id}
                                 onChange={(e) => setSessionForm({ ...sessionForm, cash_register_id: e.target.value })}
                                 required
-                            >
-                                <option value="">Select counter</option>
-                                {registers
-                                    .filter((r) => r.is_active)
-                                    .map((r) => (
-                                        <option key={r.id} value={r.id}>
-                                            {r.name} ({r.code})
-                                        </option>
-                                    ))}
-                            </select>
+                                placeholder="Select counter"
+                                options={[
+                                    { value: '', label: 'Select counter' },
+                                    ...registers
+                                        .filter((r) => r.is_active)
+                                        .map((r) => ({
+                                            value: r.id,
+                                            label: r.name,
+                                            sublabel: `(${r.code})`,
+                                        })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
 
                         <label>

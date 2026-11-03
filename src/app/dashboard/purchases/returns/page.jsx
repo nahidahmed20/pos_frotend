@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function PurchaseReturnsPage() {
     const [returns, setReturns] = useState([]);
@@ -148,19 +149,20 @@ export default function PurchaseReturnsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Supplier *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.supplier_id}
                             onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Supplier</option>
-                            {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Supplier"
+                            options={[
+                                { value: '', label: 'Select Supplier' },
+                                ...suppliers.map((s) => ({
+                                    value: s.id,
+                                    label: s.name,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -176,17 +178,18 @@ export default function PurchaseReturnsPage() {
                         </label>
                         <label className="block">
                             <span className="block text-xs font-bold text-gray-700 mb-1">Reason</span>
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={form.reason}
                                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                            >
-                                <option value="defective">Defective / Damaged</option>
-                                <option value="wrong_item">Wrong Item Sent</option>
-                                <option value="expired">Near Expiry / Expired</option>
-                                <option value="excess">Excess Delivery</option>
-                                <option value="other">Other</option>
-                            </select>
+                                options={[
+                                    { value: 'defective', label: 'Defective / Damaged' },
+                                    { value: 'wrong_item', label: 'Wrong Item Sent' },
+                                    { value: 'expired', label: 'Near Expiry / Expired' },
+                                    { value: 'excess', label: 'Excess Delivery' },
+                                    { value: 'other', label: 'Other' },
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
                     </div>
 
@@ -205,19 +208,21 @@ export default function PurchaseReturnsPage() {
                         {form.items.map((it, idx) => (
                             <div key={idx} className="p-2.5 mb-2 bg-gray-50 border border-gray-200 rounded-lg">
                                 <div className="mb-2">
-                                    <select
-                                        className="access-input text-xs"
+                                    <Select2
+                                        size="sm"
                                         value={it.product_id}
                                         onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
                                         required
-                                    >
-                                        <option value="">Select Product</option>
-                                        {products.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} (SKU: {p.sku})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="Select Product"
+                                        options={[
+                                            { value: '', label: 'Select Product' },
+                                            ...products.map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                                sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                            })),
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex-1">

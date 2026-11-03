@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function SubscriptionsPage() {
     const [subscriptions, setSubscriptions] = useState([]);
@@ -105,36 +106,40 @@ export default function SubscriptionsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Company *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.company_id}
                             onChange={(e) => setForm({ ...form, company_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Company</option>
-                            {companies.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name} ({c.email})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Company"
+                            options={[
+                                { value: '', label: 'Select Company' },
+                                ...companies.map((c) => ({
+                                    value: c.id,
+                                    label: c.name,
+                                    sublabel: c.email ? `(${c.email})` : null,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Package / Tier *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.package_id}
                             onChange={(e) => setForm({ ...form, package_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Package</option>
-                            {packages.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} - ৳{p.price} ({p.duration_days} days)
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Package"
+                            options={[
+                                { value: '', label: 'Select Package' },
+                                ...packages.map((p) => ({
+                                    value: p.id,
+                                    label: p.name,
+                                    sublabel: `৳${p.price} (${p.duration_days} days)`,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -162,15 +167,16 @@ export default function SubscriptionsPage() {
 
                     <label className="block mb-4">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Status</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.status}
                             onChange={(e) => setForm({ ...form, status: e.target.value })}
-                        >
-                            <option value="active">Active</option>
-                            <option value="expired">Expired</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                            options={[
+                                { value: 'active', label: 'Active' },
+                                { value: 'expired', label: 'Expired' },
+                                { value: 'cancelled', label: 'Cancelled' },
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <button className="access-submit" type="submit" disabled={submitting}>

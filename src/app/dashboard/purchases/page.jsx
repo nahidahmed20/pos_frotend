@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 const emptyLine = {
     product_id: '',
@@ -191,19 +192,17 @@ export default function PurchasesPage() {
                     <div className="product-grid">
                         <label>
                             Supplier<sup>*</sup>
-                            <select
-                                className="access-input"
+                            <Select2
                                 value={header.supplier_id}
                                 onChange={(event) => setHeader({ ...header, supplier_id: event.target.value })}
                                 required
-                            >
-                                <option value="">Select supplier</option>
-                                {suppliers.map((supplier) => (
-                                    <option value={supplier.id} key={supplier.id}>
-                                        {supplier.name}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select supplier"
+                                options={[
+                                    { value: '', label: 'Select supplier' },
+                                    ...suppliers.map((s) => ({ value: s.id, label: s.name })),
+                                ]}
+                                className="mt-1"
+                            />
                         </label>
                         <label>
                             Invoice number<sup>*</sup>
@@ -231,35 +230,38 @@ export default function PurchasesPage() {
                         <div className="product-grid">
                             <label>
                                 Product<sup>*</sup>
-                                <select
-                                    className="access-input"
+                                <Select2
                                     value={line.product_id}
                                     onChange={(event) => selectProduct(event.target.value)}
                                     required
-                                >
-                                    <option value="">Select product</option>
-                                    {products.map((product) => (
-                                        <option value={product.id} key={product.id}>
-                                            {product.name} · {product.sku}
-                                        </option>
-                                    ))}
-                                </select>
+                                    placeholder="Select product"
+                                    options={[
+                                        { value: '', label: 'Select product' },
+                                        ...products.map((p) => ({
+                                            value: p.id,
+                                            label: p.name,
+                                            sublabel: p.sku ? `· ${p.sku}` : null,
+                                        })),
+                                    ]}
+                                    className="mt-1"
+                                />
                             </label>
                             <label>
                                 Variant
-                                <select
-                                    className="access-input"
+                                <Select2
                                     value={line.variant_id}
                                     onChange={(event) => updateLine('variant_id', event.target.value)}
-                                >
-                                    <option value="">Base product</option>
-                                    {variants.map((variant) => (
-                                        <option value={variant.id} key={variant.id}>
-                                            {variant.name} · {variant.sku}{' '}
-                                            {variant.attributes ? `(${Object.values(variant.attributes).join(', ')})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
+                                    placeholder="Base product"
+                                    options={[
+                                        { value: '', label: 'Base product' },
+                                        ...variants.map((v) => ({
+                                            value: v.id,
+                                            label: `${v.name} · ${v.sku}`,
+                                            sublabel: v.attributes ? `(${Object.values(v.attributes).join(', ')})` : null,
+                                        })),
+                                    ]}
+                                    className="mt-1"
+                                />
                             </label>
                             <label>
                                 Quantity<sup>*</sup>

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 export default function ApiResourcePage({
     title,
@@ -114,19 +115,14 @@ export default function ApiResourcePage({
                         <label key={field.name}>
                             {field.label}
                             {field.type === 'select' ? (
-                                <select
-                                    className="access-input"
+                                <Select2
                                     value={form[field.name]}
                                     onChange={(event) => setForm({ ...form, [field.name]: event.target.value })}
                                     required={field.required}
-                                >
-                                    <option value="">Select {field.label.toLowerCase()}</option>
-                                    {field.options?.map((option) => (
-                                        <option value={option.value} key={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    placeholder={`Select ${field.label.toLowerCase()}`}
+                                    options={field.options || []}
+                                    className="mt-1"
+                                />
                             ) : (
                                 <input
                                     className="access-input"

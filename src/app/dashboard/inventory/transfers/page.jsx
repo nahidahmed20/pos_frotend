@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function StockTransfersPage() {
     const [transfers, setTransfers] = useState([]);
@@ -131,38 +132,34 @@ export default function StockTransfersPage() {
 
                     <label>
                         From Branch *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.from_branch_id}
                             onChange={(e) => setForm({ ...form, from_branch_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select source branch</option>
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select source branch"
+                            options={[
+                                { value: '', label: 'Select source branch' },
+                                ...branches.map((b) => ({ value: b.id, label: b.name })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>
                         To Branch *
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.to_branch_id}
                             onChange={(e) => setForm({ ...form, to_branch_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select destination branch</option>
-                            {branches
-                                .filter((b) => String(b.id) !== String(form.from_branch_id))
-                                .map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
-                                ))}
-                        </select>
+                            placeholder="Select destination branch"
+                            options={[
+                                { value: '', label: 'Select destination branch' },
+                                ...branches
+                                    .filter((b) => String(b.id) !== String(form.from_branch_id))
+                                    .map((b) => ({ value: b.id, label: b.name })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label>
@@ -210,19 +207,21 @@ export default function StockTransfersPage() {
                                             </button>
                                         )}
                                     </div>
-                                    <select
-                                        className="access-input text-xs"
+                                    <Select2
+                                        size="sm"
                                         value={item.product_id}
                                         onChange={(e) => updateItem(idx, 'product_id', e.target.value)}
                                         required
-                                    >
-                                        <option value="">Select product</option>
-                                        {products.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} ({p.sku})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="Select product"
+                                        options={[
+                                            { value: '', label: 'Select product' },
+                                            ...products.map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                                sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                            })),
+                                        ]}
+                                    />
                                     <input
                                         className="access-input text-xs"
                                         type="number"

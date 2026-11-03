@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 const tabs = [
     { id: 'roles', label: 'Roles' },
@@ -115,7 +116,27 @@ export default function AccessControlPage() {
                         <RecordPanel title="Role directory" count={roles.length}>{roles.map((role) => <div className="access-record role-record" key={role.id}><span className="record-mark role"><i className="ti ti-shield" /></span><span><strong>{role.name}</strong><small>{role.permissions?.length || 0} permissions assigned</small></span><em>{role.permissions?.slice(0, 2).map((permission) => permission.name).join(' · ') || 'No permissions'}</em></div>)}</RecordPanel>
                     </>}
                     {activeTab === 'users' && <>
-                        <CreatePanel eyebrow="NEW USER" title="Invite a teammate" description="Create an account and set its access level." onSubmit={createUser} button="Create user"><div className="access-form-grid"><label>Full name<input className="access-input" value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} placeholder="e.g. Ayesha Rahman" required /></label><label>Email address<input className="access-input" type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} placeholder="name@company.com" required /></label><label>Password<input className="access-input" type="password" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} placeholder="Minimum 8 characters" minLength="8" required /></label><label>Role<select className="access-input" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value })} required><option value="">Select a role</option>{roles.map((role) => <option key={role.id} value={role.name}>{role.name}</option>)}</select></label></div></CreatePanel>
+                        <CreatePanel eyebrow="NEW USER" title="Invite a teammate" description="Create an account and set its access level." onSubmit={createUser} button="Create user">
+                            <div className="access-form-grid">
+                                <label>Full name<input className="access-input" value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} placeholder="e.g. Ayesha Rahman" required /></label>
+                                <label>Email address<input className="access-input" type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} placeholder="name@company.com" required /></label>
+                                <label>Password<input className="access-input" type="password" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} placeholder="Minimum 8 characters" minLength="8" required /></label>
+                                <label>
+                                    Role
+                                    <Select2
+                                        value={userForm.role}
+                                        onChange={(event) => setUserForm({ ...userForm, role: event.target.value })}
+                                        required
+                                        placeholder="Select a role"
+                                        options={[
+                                            { value: '', label: 'Select a role' },
+                                            ...roles.map((role) => ({ value: role.name, label: role.name })),
+                                        ]}
+                                        className="mt-1"
+                                    />
+                                </label>
+                            </div>
+                        </CreatePanel>
                         <RecordPanel title="Workspace users" count={users.length}>{users.map((user) => <div className="access-record user-record" key={user.id}><span className="user-avatar">{user.name?.charAt(0)}</span><span><strong>{user.name}</strong><small>{user.email}</small></span><em>{user.roles?.map((role) => role.name).join(', ') || 'No role'}</em></div>)}</RecordPanel>
                     </>}
                 </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function ExpiredProductsPage() {
     const [batches, setBatches] = useState([]);
@@ -33,16 +34,21 @@ export default function ExpiredProductsPage() {
                     <p>Track perishable stock batches to prevent sales of expired goods.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <select
-                        className="access-input py-1.5 px-3 text-xs"
-                        value={days}
-                        onChange={(e) => setDays(parseInt(e.target.value, 10))}
-                    >
-                        <option value={0}>Already Expired</option>
-                        <option value={7}>Expiring in 7 Days</option>
-                        <option value={30}>Expiring in 30 Days</option>
-                        <option value={90}>Expiring in 90 Days</option>
-                    </select>
+                    <div className="w-52">
+                        <Select2
+                            size="sm"
+                            value={days}
+                            onChange={(e) => setDays(parseInt(e.target.value, 10))}
+                            isSearchable={false}
+                            isClearable={false}
+                            options={[
+                                { value: 0, label: 'Already Expired' },
+                                { value: 7, label: 'Expiring in 7 Days' },
+                                { value: 30, label: 'Expiring in 30 Days' },
+                                { value: 90, label: 'Expiring in 90 Days' },
+                            ]}
+                        />
+                    </div>
                     <button type="button" className="access-refresh" onClick={() => loadData(days)}>
                         <i className="ti ti-refresh" /> Refresh
                     </button>

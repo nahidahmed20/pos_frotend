@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/lib/axios';
 import Pagination from '@/components/Pagination';
 import TableToolbar from '@/components/TableToolbar';
+import Select2 from '@/components/Select2';
 
 const defaults = {
     name: '', short_name: '', brand: '', category_id: '', sku: '', barcode: '', secondary_barcode: '', unit: 'pcs',
@@ -461,20 +462,21 @@ function ProductField({ field, value, onChange, categories = [] }) {
     const [name, label, type = 'text', required] = field;
     const control =
         name === 'category_id' ? (
-            <select
-                className="access-input"
+            <Select2
                 value={value}
                 onChange={(event) => onChange(name, event.target.value)}
                 required={required}
-            >
-                <option value="">Select category</option>
-                {categories.map((category) => (
-                    <option value={category.id} key={category.id}>
-                        {category.name}
-                        {category.parent?.name ? ` · ${category.parent.name}` : ''}
-                    </option>
-                ))}
-            </select>
+                placeholder="Select category"
+                options={[
+                    { value: '', label: 'Select category' },
+                    ...categories.map((category) => ({
+                        value: category.id,
+                        label: category.name,
+                        sublabel: category.parent?.name ? `(${category.parent.name})` : null,
+                    })),
+                ]}
+                className="mt-1"
+            />
         ) : type === 'textarea' ? (
             <textarea
                 className="access-input product-textarea"

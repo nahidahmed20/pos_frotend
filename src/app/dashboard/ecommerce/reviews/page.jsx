@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
+import Select2 from '@/components/Select2';
 
 export default function EcommerceReviewsPage() {
     const [reviews, setReviews] = useState([]);
@@ -117,19 +118,21 @@ export default function EcommerceReviewsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Product *</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.product_id}
                             onChange={(e) => setForm({ ...form, product_id: e.target.value })}
                             required
-                        >
-                            <option value="">Select Product</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} ({p.sku})
-                                </option>
-                            ))}
-                        </select>
+                            placeholder="Select Product"
+                            options={[
+                                { value: '', label: 'Select Product' },
+                                ...products.map((p) => ({
+                                    value: p.id,
+                                    label: p.name,
+                                    sublabel: p.sku ? `(SKU: ${p.sku})` : null,
+                                })),
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-3">
@@ -146,17 +149,18 @@ export default function EcommerceReviewsPage() {
 
                     <label className="block mb-3">
                         <span className="block text-xs font-bold text-gray-700 mb-1">Star Rating (1 - 5)</span>
-                        <select
-                            className="access-input"
+                        <Select2
                             value={form.rating}
-                            onChange={(e) => setForm({ ...form, rating: e.target.value })}
-                        >
-                            <option value={5}>⭐⭐⭐⭐⭐ (5 Stars - Excellent)</option>
-                            <option value={4}>⭐⭐⭐⭐ (4 Stars - Good)</option>
-                            <option value={3}>⭐⭐⭐ (3 Stars - Average)</option>
-                            <option value={2}>⭐⭐ (2 Stars - Below Average)</option>
-                            <option value={1}>⭐ (1 Star - Poor)</option>
-                        </select>
+                            onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
+                            options={[
+                                { value: 5, label: '⭐⭐⭐⭐⭐ (5 Stars - Excellent)' },
+                                { value: 4, label: '⭐⭐⭐⭐ (4 Stars - Good)' },
+                                { value: 3, label: '⭐⭐⭐ (3 Stars - Average)' },
+                                { value: 2, label: '⭐⭐ (2 Stars - Below Average)' },
+                                { value: 1, label: '⭐ (1 Star - Poor)' },
+                            ]}
+                            className="mt-1"
+                        />
                     </label>
 
                     <label className="block mb-4">
