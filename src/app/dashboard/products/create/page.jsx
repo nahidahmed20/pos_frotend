@@ -1,2 +1,7 @@
-import { redirect } from 'next/navigation';
-export default function ProductCreatePage() { redirect('/dashboard/products'); }
+'use client';
+
+import ProductManagementPage from '@/components/ProductManagementPage';
+
+export default function ProductCreatePage() {
+    return <ProductManagementPage mode="create" />;
+}

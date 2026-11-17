@@ -32,7 +32,6 @@ export default function RootLayout({ children }) {
 
         {/* Global scripts loaded non-blockingly */}
         <Script src="/assets/js/jquery-3.7.1.min.js" strategy="afterInteractive" />
-        <Script src="/assets/plugins/sweetalert/sweetalert2.all.min.js" strategy="afterInteractive" />
         <Script src="/assets/js/feather.min.js" strategy="lazyOnload" />
       </body>
     </html>

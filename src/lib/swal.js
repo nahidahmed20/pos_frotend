@@ -20,6 +20,7 @@ Swal.fire = function (...args) {
             opts.showCloseButton = true;
             opts.timer = opts.timer ?? 4500;
             opts.timerProgressBar = opts.timerProgressBar ?? true;
+            const dismissAfter = opts.timer;
 
             const userDidOpen = opts.didOpen;
             opts.didOpen = (toast) => {
@@ -29,6 +30,11 @@ Swal.fire = function (...args) {
                     Swal.close();
                 };
                 if (userDidOpen) userDidOpen(toast);
+                // SweetAlert pauses the timer while hovered/focused; do not let an
+                // error toast remain open just because the pointer is over it.
+                window.setTimeout(() => {
+                    if (toast.isConnected) Swal.close();
+                }, dismissAfter);
             };
         } else {
             // Modal dialog (e.g. login error, confirm dialog)
@@ -38,6 +44,16 @@ Swal.fire = function (...args) {
             if (opts.icon === 'error' && !opts.timer) {
                 opts.timer = 5000;
                 opts.timerProgressBar = true;
+            }
+            if (opts.icon === 'error' && opts.timer) {
+                const dismissAfter = opts.timer;
+                const userDidOpen = opts.didOpen;
+                opts.didOpen = (popup) => {
+                    if (userDidOpen) userDidOpen(popup);
+                    window.setTimeout(() => {
+                        if (popup.isConnected) Swal.close();
+                    }, dismissAfter);
+                };
             }
         }
         return originalFire(opts);

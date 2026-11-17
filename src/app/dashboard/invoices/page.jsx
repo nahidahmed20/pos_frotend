@@ -8,16 +8,27 @@ import TableToolbar from '@/components/TableToolbar';
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState([]);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [invoiceSettings, setInvoiceSettings] = useState({});
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const currencySymbol = invoiceSettings.currency_symbol || '৳';
+    const settingEnabled = (key, fallback = true) => {
+        const value = invoiceSettings[key];
+        if (value === undefined || value === null || value === '') return fallback;
+        return value === true || value === 1 || value === '1' || value === 'true';
+    };
 
     const loadInvoices = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('/api/invoices');
+            const [res, settingsRes] = await Promise.all([
+                axios.get('/api/invoices'),
+                axios.get('/api/settings').catch(() => ({ data: { data: {} } })),
+            ]);
             setInvoices(res.data.data || []);
+            setInvoiceSettings(settingsRes.data?.data || settingsRes.data?.settings || settingsRes.data || {});
         } catch {
             if (window.Swal) window.Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Failed to load invoices', showConfirmButton: false, timer: 4000, timerProgressBar: true });
         } finally {
@@ -214,14 +225,14 @@ export default function InvoicesPage() {
             {/* Receipt Modal */}
             {selectedInvoice && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div id="dashboard-invoice-print" className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-start pb-3 border-b mb-4">
                             <div>
-                                <h3 className="font-bold text-lg text-gray-900">
-                                    {selectedInvoice.store_info?.name || 'Dreams POS'}
-                                </h3>
+                                {settingEnabled('invoice_show_logo') && invoiceSettings.logo_url && <img src={invoiceSettings.logo_url} alt="Business logo" className="max-h-12 max-w-32 object-contain mb-2" />}
+                                <h3 className="font-bold text-lg text-gray-900">{invoiceSettings.invoice_title || 'Tax Invoice'}</h3>
+                                <p className="font-semibold">{invoiceSettings.company_name || selectedInvoice.store_info?.name || 'Dreams POS'}</p>
                                 <p className="text-xs text-gray-500">
-                                    {selectedInvoice.store_info?.address}
+                                    {invoiceSettings.address || selectedInvoice.store_info?.address}
                                 </p>
                             </div>
                             <button
@@ -244,10 +255,10 @@ export default function InvoicesPage() {
                                 <span className="text-gray-500">Date:</span>
                                 <span>{selectedInvoice.sale?.sold_at}</span>
                             </div>
-                            <div className="flex justify-between">
+                            {settingEnabled('invoice_show_customer') && <div className="flex justify-between">
                                 <span className="text-gray-500">Customer:</span>
                                 <span className="font-bold">{selectedInvoice.sale?.customer?.name || 'Walk-in'}</span>
-                            </div>
+                            </div>}
                         </div>
 
                         {/* Items */}
@@ -264,7 +275,7 @@ export default function InvoicesPage() {
                                 <tbody>
                                     {selectedInvoice.sale?.items?.map((it, idx) => (
                                         <tr key={idx} className="border-b border-gray-50">
-                                            <td className="py-1 font-semibold">{it.product?.name}</td>
+                                            <td className="py-1 font-semibold">{it.product?.name}{settingEnabled('invoice_show_sku') && it.product?.sku ? <small className="block text-gray-500">{it.product.sku}</small> : null}</td>
                                             <td className="text-center py-1">{it.quantity}</td>
                                             <td className="text-right py-1">৳{parseFloat(it.unit_price).toFixed(2)}</td>
                                             <td className="text-right py-1 font-bold">
@@ -282,7 +293,7 @@ export default function InvoicesPage() {
                                 <span>Subtotal:</span>
                                 <span>৳{parseFloat(selectedInvoice.sale?.subtotal || 0).toFixed(2)}</span>
                             </div>
-                            {parseFloat(selectedInvoice.sale?.discount || 0) > 0 && (
+                            {settingEnabled('invoice_show_discount') && parseFloat(selectedInvoice.sale?.discount || 0) > 0 && (
                                 <div className="flex justify-between text-green-700">
                                     <span>Discount:</span>
                                     <span>-৳{parseFloat(selectedInvoice.sale?.discount).toFixed(2)}</span>

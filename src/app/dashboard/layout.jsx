@@ -1,5 +1,6 @@
 // src/app/dashboard/layout.jsx
 
+import { Suspense } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 // import HorizontalSidebar from "@/components/HorizontalSidebar";
@@ -11,7 +12,9 @@ export default function DashboardLayout({ children }) {
             
             <Header />
             
-            <Sidebar /> 
+            <Suspense fallback={null}>
+                <Sidebar />
+            </Suspense>
             
 
 

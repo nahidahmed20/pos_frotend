@@ -3,12 +3,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import axios from '@/lib/axios';
 
 export default function Sidebar() {
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     const [openSubmenus, setOpenSubmenus] = useState({
         superadmin: false,
@@ -66,6 +67,32 @@ export default function Sidebar() {
             return pathname === '/dashboard';
         }
         const [cleanHref] = href.split('?');
+        const expectedParams = new URLSearchParams(href.split('?')[1] || '');
+        const hasExpectedParams = [...expectedParams.keys()].length > 0;
+
+        if (hasExpectedParams) {
+            if (pathname !== cleanHref) return false;
+            return [...expectedParams.entries()].every(([key, value]) => searchParams.get(key) === value);
+        }
+
+        // When a menu item has a query-specific sibling on the same path
+        // (Users and Roles & Permissions), only the matching tab is active.
+        if (cleanHref === '/dashboard/access-control' && searchParams.get('tab') === 'users') {
+            return false;
+        }
+
+        const nestedMenuRoutes = [
+            '/dashboard/products/create',
+            '/dashboard/purchases/create',
+            '/dashboard/purchases/returns',
+            '/dashboard/accounts/balance-sheet',
+            '/dashboard/settings/profile',
+        ];
+        const hasMoreSpecificRoute = nestedMenuRoutes.some((route) =>
+            pathname.startsWith(route) && route.startsWith(`${cleanHref}/`)
+        );
+        if (hasMoreSpecificRoute) return false;
+
         return pathname === cleanHref || pathname.startsWith(cleanHref + '/');
     };
 
@@ -279,7 +306,8 @@ export default function Sidebar() {
                         <li className="submenu-open">
                             <h6 className="font-bold text-xs text-[#092C4C] mt-0 mb-2">Purchases</h6>
                             <ul>
-                                <li className={isActive('/dashboard/purchases') ? 'active' : ''}><Link href="/dashboard/purchases" className={linkCls('/dashboard/purchases')}><i className={`ti ti-shopping-bag ${iconCls('/dashboard/purchases')}`} /><span>Purchases</span></Link></li>
+                                <li className={isActive('/dashboard/purchases') ? 'active' : ''}><Link href="/dashboard/purchases" className={linkCls('/dashboard/purchases')}><i className={`ti ti-shopping-bag ${iconCls('/dashboard/purchases')}`} /><span>Purchase List</span></Link></li>
+                                <li className={isActive('/dashboard/purchases/create') ? 'active' : ''}><Link href="/dashboard/purchases/create" className={linkCls('/dashboard/purchases/create')}><i className={`ti ti-plus ${iconCls('/dashboard/purchases/create')}`} /><span>Create Purchase</span></Link></li>
                                 <li className={isActive('/dashboard/purchase-orders') ? 'active' : ''}><Link href="/dashboard/purchase-orders" className={linkCls('/dashboard/purchase-orders')}><i className={`ti ti-file-unknown ${iconCls('/dashboard/purchase-orders')}`} /><span>Purchase Order</span></Link></li>
                                 <li className={isActive('/dashboard/purchases/returns') ? 'active' : ''}><Link href="/dashboard/purchases/returns" className={linkCls('/dashboard/purchases/returns')}><i className={`ti ti-file-upload ${iconCls('/dashboard/purchases/returns')}`} /><span>Purchase Return</span></Link></li>
                             </ul>

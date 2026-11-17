@@ -14,6 +14,7 @@ export default function PosPage() {
     const [user, setUser] = useState(null);
     const [selectedBranch, setSelectedBranch] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
+    const businessDefaultsApplied = useRef(false);
 
     // Search, Filter & Clock
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -27,6 +28,17 @@ export default function PosPage() {
     // Navigation & Dropdown
     const [openDropdown, setOpenDropdown] = useState(null);
     const searchInputRef = useRef(null);
+    const categoryScrollRef = useRef(null);
+    const currencySymbol = appInfo?.currency_symbol || '৳';
+    const settingEnabled = (key, fallback = true) => {
+        const value = appInfo?.[key];
+        if (value === undefined || value === null || value === '') return fallback;
+        return value === true || value === 1 || value === '1' || value === 'true';
+    };
+
+    const scrollCategories = (direction) => {
+        categoryScrollRef.current?.scrollBy({ left: direction * 240, behavior: 'smooth' });
+    };
 
     // Cart & Order Calculation
     const [cart, setCart] = useState([]);
@@ -178,15 +190,24 @@ export default function PosPage() {
     const loadData = async (branchIdOverride) => {
         setLoading(true);
         try {
-            const [catRes, meRes, branchRes, infoRes] = await Promise.all([
+            const [catRes, meRes, branchRes, infoRes, settingsRes] = await Promise.all([
                 axios.get('/api/categories').catch(() => ({ data: { data: [] } })),
                 axios.get('/api/me').catch(() => axios.get('/api/profile')).catch(() => ({ data: null })),
                 axios.get('/api/branches').catch(() => ({ data: { data: [] } })),
                 axios.get('/api/app-info').catch(() => ({ data: null })),
+                axios.get('/api/settings').catch(() => ({ data: { data: {} } })),
             ]);
 
             setCategories(Array.isArray(catRes?.data?.data) ? catRes.data.data : []);
-            setAppInfo(infoRes?.data || null);
+            const appInfoData = infoRes?.data?.data || infoRes?.data || {};
+            const settingsData = settingsRes?.data?.data || settingsRes?.data?.settings || settingsRes?.data || {};
+            setAppInfo({ ...appInfoData, ...settingsData });
+            if (!businessDefaultsApplied.current) {
+                const configuredTaxRate = Number(settingsData.tax_rate || 0);
+                setTax(configuredTaxRate);
+                setTaxType(settingsData.default_tax_type || 'percent');
+                businessDefaultsApplied.current = true;
+            }
 
             const userData = meRes?.data?.user || meRes?.data?.data || meRes?.data || null;
             setUser(userData);
@@ -575,7 +596,7 @@ export default function PosPage() {
         }
 
         setSubmitting(true);
-        const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+        const invoiceNumber = `${appInfo?.invoice_prefix || 'INV-'}${Date.now().toString().slice(-6)}`;
 
         try {
             const calculatedDiscount = Number(discountAmount.toFixed(2));
@@ -749,7 +770,7 @@ export default function PosPage() {
             setPaymentMethod('cash');
             setCashReceived(String(val));
             setShowCalculator(false);
-            toast('success', `Cash Received set to ৳${val}`);
+            toast('success', `Cash Received set to ${currencySymbol}${val}`);
         }
     };
 
@@ -771,7 +792,7 @@ export default function PosPage() {
         playSound('beep');
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
             navigator.clipboard.writeText(calcDisplay);
-            toast('success', `Copied ৳${calcDisplay} to clipboard`);
+            toast('success', `Copied ${currencySymbol}${calcDisplay} to clipboard`);
         }
     };
 
@@ -1001,11 +1022,15 @@ export default function PosPage() {
                         {/* LEFT: Products Catalog Column (8 cols) */}
                         <div className="xl:col-span-8 flex flex-col gap-3">
                             {/* Categories Horizontal Bar */}
-                            <div className="bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-sm overflow-x-auto">
+                            <div className="pos-category-bar bg-white rounded-xl border border-slate-200/80 p-2.5 shadow-sm">
+                                <button type="button" className="pos-category-arrow" aria-label="Scroll categories left" onClick={() => scrollCategories(-1)}>
+                                    <i className="ti ti-chevron-left" />
+                                </button>
+                                <div ref={categoryScrollRef} className="pos-category-scroll">
                                 <ul className="flex items-center gap-2 min-w-max">
                                     <li
                                         onClick={() => setSelectedCategory('all')}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                                        className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                                             selectedCategory === 'all'
                                                 ? 'bg-primary text-white shadow-sm'
                                                 : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
@@ -1018,7 +1043,7 @@ export default function PosPage() {
                                         <li
                                             key={c.id}
                                             onClick={() => setSelectedCategory(String(c.id))}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                                            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                                                 String(selectedCategory) === String(c.id)
                                                     ? 'bg-primary text-white shadow-sm'
                                                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
@@ -1029,6 +1054,10 @@ export default function PosPage() {
                                         </li>
                                     ))}
                                 </ul>
+                                </div>
+                                <button type="button" className="pos-category-arrow" aria-label="Scroll categories right" onClick={() => scrollCategories(1)}>
+                                    <i className="ti ti-chevron-right" />
+                                </button>
                             </div>
 
                             {/* Search & Barcode Scan Bar */}
@@ -1106,12 +1135,12 @@ export default function PosPage() {
                                                 .filter((i) => i.product_id === product.id)
                                                 .reduce((sum, i) => sum + i.quantity, 0);
 
-                                            let priceDisplay = `৳${price.toFixed(2)}`;
+                                            let priceDisplay = `${currencySymbol}${price.toFixed(2)}`;
                                             if (hasVariants && product.variants.length > 0) {
                                                 const vPrices = product.variants.map((v) => Number(v.selling_price || v.retail_price || price));
                                                 const minP = Math.min(...vPrices);
                                                 const maxP = Math.max(...vPrices);
-                                                priceDisplay = minP === maxP ? `৳${minP.toFixed(2)}` : `৳${minP.toFixed(0)} - ৳${maxP.toFixed(0)}`;
+                                                priceDisplay = minP === maxP ? `${currencySymbol}${minP.toFixed(2)}` : `${currencySymbol}${minP.toFixed(0)} - ${currencySymbol}${maxP.toFixed(0)}`;
                                             }
 
                                             return (
@@ -1303,7 +1332,7 @@ export default function PosPage() {
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            <p className="text-[11px] text-gray-400 ml-5">৳{item.price.toFixed(2)} each</p>
+                                                            <p className="text-[11px] text-gray-400 ml-5">{currencySymbol}{item.price.toFixed(2)} each</p>
                                                         </div>
 
                                                         {/* Quantity Stepper */}
@@ -1330,7 +1359,7 @@ export default function PosPage() {
                                                         {/* Total Line Price */}
                                                         <div className="text-right w-20">
                                                             <span className="text-xs font-black text-gray-900">
-                                                                ৳{(item.price * item.quantity).toFixed(2)}
+                                                                {currencySymbol}{(item.price * item.quantity).toFixed(2)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1343,7 +1372,7 @@ export default function PosPage() {
                                     <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 space-y-2 text-xs">
                                         <div className="flex justify-between text-gray-600">
                                             <span>Subtotal:</span>
-                                            <span className="font-bold text-gray-900">৳{subtotal.toFixed(2)}</span>
+                                            <span className="font-bold text-gray-900">{currencySymbol}{subtotal.toFixed(2)}</span>
                                         </div>
 
                                         {/* Discount Row */}
@@ -1373,7 +1402,7 @@ export default function PosPage() {
                                                                     : 'text-slate-600 hover:text-slate-900'
                                                             }`}
                                                         >
-                                                            ৳ Fixed
+                                                            {currencySymbol} Fixed
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1390,7 +1419,7 @@ export default function PosPage() {
                                                             placeholder="0"
                                                         />
                                                         <span className="absolute right-1.5 top-1 text-[11px] font-bold text-gray-400 pointer-events-none">
-                                                            {discountType === 'percent' ? '%' : '৳'}
+                                                            {discountType === 'percent' ? '%' : currencySymbol}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1425,12 +1454,12 @@ export default function PosPage() {
                                                                           : 'bg-white text-gray-500 border-slate-200 hover:bg-slate-50'
                                                                   }`}
                                                               >
-                                                                  ৳{amt}
+                                                                  {currencySymbol}{amt}
                                                               </button>
                                                           ))}
                                                 </div>
                                                 <span className="text-[11px] font-black text-red-600">
-                                                    -৳{discountAmount.toFixed(2)}
+                                                    -{currencySymbol}{discountAmount.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
@@ -1462,7 +1491,7 @@ export default function PosPage() {
                                                                     : 'text-slate-600 hover:text-slate-900'
                                                             }`}
                                                         >
-                                                            ৳ Fixed
+                                                            {currencySymbol} Fixed
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1479,7 +1508,7 @@ export default function PosPage() {
                                                             placeholder="0"
                                                         />
                                                         <span className="absolute right-1.5 top-1 text-[11px] font-bold text-gray-400 pointer-events-none">
-                                                            {taxType === 'percent' ? '%' : '৳'}
+                                                            {taxType === 'percent' ? '%' : currencySymbol}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1514,12 +1543,12 @@ export default function PosPage() {
                                                                           : 'bg-white text-gray-500 border-slate-200 hover:bg-slate-50'
                                                                   }`}
                                                               >
-                                                                  ৳{amt}
+                                                                  {currencySymbol}{amt}
                                                               </button>
                                                           ))}
                                                 </div>
                                                 <span className="text-[11px] font-black text-blue-600">
-                                                    +৳{taxAmount.toFixed(2)}
+                                                    +{currencySymbol}{taxAmount.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
@@ -1540,7 +1569,7 @@ export default function PosPage() {
                                         {/* Grand Total */}
                                         <div className="pt-2 border-t border-dashed border-slate-300 flex justify-between items-center">
                                             <span className="text-xs font-black uppercase text-gray-700">Total Payable:</span>
-                                            <span className="text-lg font-black text-primary">৳{grandTotal.toFixed(2)}</span>
+                                            <span className="text-lg font-black text-primary">{currencySymbol}{grandTotal.toFixed(2)}</span>
                                         </div>
                                     </div>
 
@@ -1615,7 +1644,7 @@ export default function PosPage() {
                                                     onClick={() => setCashReceived(String(grandTotal))}
                                                     className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-slate-200 hover:bg-slate-100 cursor-pointer whitespace-nowrap"
                                                 >
-                                                    Exact (৳{grandTotal.toFixed(0)})
+                                                    Exact ({currencySymbol}{grandTotal.toFixed(0)})
                                                 </button>
                                                 {[500, 1000, 2000].map((amt) => (
                                                     <button
@@ -1624,7 +1653,7 @@ export default function PosPage() {
                                                         onClick={() => setCashReceived(String(amt))}
                                                         className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-slate-200 hover:bg-slate-100 cursor-pointer whitespace-nowrap"
                                                     >
-                                                        ৳{amt}
+                                                        {currencySymbol}{amt}
                                                     </button>
                                                 ))}
                                             </div>
@@ -1633,12 +1662,12 @@ export default function PosPage() {
                                             {changeAmount > 0 ? (
                                                 <div className="flex items-center justify-between pt-1.5 border-t border-slate-200 text-emerald-700 font-black text-xs">
                                                     <span>Change Return (ফেরত দিন):</span>
-                                                    <span className="text-sm">৳{changeAmount.toFixed(2)}</span>
+                                                    <span className="text-sm">{currencySymbol}{changeAmount.toFixed(2)}</span>
                                                 </div>
                                             ) : dueAmount > 0 ? (
                                                 <div className="flex items-center justify-between pt-1.5 border-t border-slate-200 text-amber-700 font-black text-xs">
                                                     <span>Due Amount (বাকি থাকবে):</span>
-                                                    <span className="text-sm">৳{dueAmount.toFixed(2)}</span>
+                                                    <span className="text-sm">{currencySymbol}{dueAmount.toFixed(2)}</span>
                                                 </div>
                                             ) : null}
                                         </div>
@@ -1770,7 +1799,7 @@ export default function PosPage() {
                                         </div>
 
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <span className="text-xs font-black text-gray-900">৳{vPrice.toFixed(2)}</span>
+                                            <span className="text-xs font-black text-gray-900">{currencySymbol}{vPrice.toFixed(2)}</span>
                                             <button
                                                 type="button"
                                                 disabled={vOutOfStock}
@@ -1839,7 +1868,7 @@ export default function PosPage() {
                                                 <span className="text-[10px] text-gray-400 font-semibold">{h.time}</span>
                                             </div>
                                             <p className="text-[11px] text-gray-500 mt-0.5">
-                                                {h.cart?.length || 0} items · Total: <b>৳{h.grandTotal?.toFixed(2)}</b>
+                                                {h.cart?.length || 0} items · Total: <b>{currencySymbol}{h.grandTotal?.toFixed(2)}</b>
                                             </p>
                                         </div>
 
@@ -1977,20 +2006,23 @@ export default function PosPage() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
                     <div className="bg-white text-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
                         {/* Thermal Print Receipt Card */}
-                        <div id="pos-receipt-print" className="bg-white p-3 border border-dashed border-slate-300 rounded-xl font-mono text-xs space-y-2">
+                        <div id="pos-receipt-print" className={`bg-white p-3 border border-dashed border-slate-300 rounded-xl font-mono text-xs space-y-2 ${appInfo?.receipt_width === '58mm' ? 'receipt-58mm' : appInfo?.receipt_width === 'A4' ? 'receipt-a4' : ''}`}>
                             <div className="text-center pb-2 border-b border-dashed border-slate-300">
+                                {settingEnabled('invoice_show_logo') && (appInfo?.logo_url || appInfo?.logo_dark) && <img src={appInfo.logo_url || appInfo.logo_dark} alt="Business logo" className="mx-auto mb-2 max-h-12 max-w-[150px] object-contain" />}
                                 <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">
                                     {appInfo?.company_name || 'DreamsPOS Store'}
                                 </h2>
                                 <p className="text-[11px] text-gray-500">{completedSale.branchName}</p>
-                                <p className="text-[10px] text-gray-400 mt-0.5">Hotline: {appInfo?.support_email || 'support@pos.com'}</p>
-                                <p className="text-[11px] font-bold text-slate-700 mt-1">Tax Invoice: #{completedSale.invoice_number}</p>
+                                {(appInfo?.address || appInfo?.city) && <p className="text-[10px] text-gray-400 mt-0.5">{[appInfo.address, appInfo.city, appInfo.state].filter(Boolean).join(', ')}</p>}
+                                {(appInfo?.phone || appInfo?.email) && <p className="text-[10px] text-gray-400 mt-0.5">{appInfo.phone || appInfo.email}</p>}
+                                {settingEnabled('invoice_show_tax_number') && appInfo?.tax_number && <p className="text-[10px] text-gray-400">BIN: {appInfo.tax_number}</p>}
+                                <p className="text-[11px] font-bold text-slate-700 mt-1">{appInfo?.invoice_title || 'Tax Invoice'}: #{completedSale.invoice_number}</p>
                                 <p className="text-[10px] text-gray-400">{completedSale.date}</p>
                             </div>
 
                             <div className="text-[11px] space-y-0.5 py-1">
-                                <p><b>Cashier:</b> {completedSale.cashier}</p>
-                                <p><b>Customer:</b> {completedSale.customer} {completedSale.customer_phone !== '—' && `(${completedSale.customer_phone})`}</p>
+                                {settingEnabled('invoice_show_cashier') && <p><b>Cashier:</b> {completedSale.cashier}</p>}
+                                {settingEnabled('invoice_show_customer') && <p><b>Customer:</b> {completedSale.customer} {completedSale.customer_phone !== '—' && `(${completedSale.customer_phone})`}</p>}
                             </div>
 
                             <div className="border-t border-b border-dashed border-slate-300 py-1.5">
@@ -2004,10 +2036,11 @@ export default function PosPage() {
                                         <div key={idx} className="pt-1 flex justify-between text-[11px]">
                                             <div className="truncate max-w-[140px]">
                                                 <span>{it.name}</span>
+                                                {settingEnabled('invoice_show_sku') && it.sku && <span className="text-[10px] text-gray-500 block">SKU: {it.sku}</span>}
                                                 {it.variant_name && <span className="text-[10px] text-gray-500 block">({it.variant_name})</span>}
                                             </div>
                                             <span className="text-gray-500">{it.quantity} × {it.price.toFixed(2)}</span>
-                                            <span className="font-bold">৳{(it.quantity * it.price).toFixed(2)}</span>
+                                            <span className="font-bold">{currencySymbol}{(it.quantity * it.price).toFixed(2)}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -2016,49 +2049,49 @@ export default function PosPage() {
                             <div className="space-y-1 text-[11px] pt-1">
                                 <div className="flex justify-between">
                                     <span>Subtotal:</span>
-                                    <span>৳{completedSale.subtotal.toFixed(2)}</span>
+                                    <span>{currencySymbol}{completedSale.subtotal.toFixed(2)}</span>
                                 </div>
-                                {completedSale.discount > 0 && (
+                                {settingEnabled('invoice_show_discount') && completedSale.discount > 0 && (
                                     <div className="flex justify-between text-red-600">
                                         <span>
                                             Discount {completedSale.discountType === 'percent' ? `(${completedSale.discountRate}%)` : '(Fixed)'}:
                                         </span>
-                                        <span>-৳{completedSale.discount.toFixed(2)}</span>
+                                        <span>-{currencySymbol}{completedSale.discount.toFixed(2)}</span>
                                     </div>
                                 )}
-                                {completedSale.tax > 0 && (
+                                {settingEnabled('invoice_show_tax') && completedSale.tax > 0 && (
                                     <div className="flex justify-between text-blue-600">
                                         <span>
                                             Tax / VAT {completedSale.taxType === 'percent' ? `(${completedSale.taxRate}%)` : '(Fixed)'}:
                                         </span>
-                                        <span>+৳{completedSale.tax.toFixed(2)}</span>
+                                        <span>+{currencySymbol}{completedSale.tax.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-sm font-black pt-1 border-t border-dashed border-slate-300">
                                     <span>Total Payable:</span>
-                                    <span>৳{completedSale.grandTotal.toFixed(2)}</span>
+                                    <span>{currencySymbol}{completedSale.grandTotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-700">
+                                {settingEnabled('invoice_show_paid_due') && <div className="flex justify-between text-slate-700">
                                     <span>Paid ({completedSale.paymentMethod?.toUpperCase()}):</span>
-                                    <span className="font-bold">৳{completedSale.paid_amount.toFixed(2)}</span>
-                                </div>
-                                {completedSale.change_amount > 0 && (
+                                    <span className="font-bold">{currencySymbol}{completedSale.paid_amount.toFixed(2)}</span>
+                                </div>}
+                                {settingEnabled('invoice_show_paid_due') && completedSale.change_amount > 0 && (
                                     <div className="flex justify-between text-emerald-700 font-bold">
                                         <span>Change Return:</span>
-                                        <span>৳{completedSale.change_amount.toFixed(2)}</span>
+                                        <span>{currencySymbol}{completedSale.change_amount.toFixed(2)}</span>
                                     </div>
                                 )}
-                                {completedSale.due_amount > 0 && (
+                                {settingEnabled('invoice_show_paid_due') && completedSale.due_amount > 0 && (
                                     <div className="flex justify-between text-amber-700 font-bold">
                                         <span>Due Balance:</span>
-                                        <span>৳{completedSale.due_amount.toFixed(2)}</span>
+                                        <span>{currencySymbol}{completedSale.due_amount.toFixed(2)}</span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="text-center pt-2 border-t border-dashed border-slate-300 text-[10px] text-gray-400">
-                                <p>Thank you for shopping with us!</p>
-                                <p>Please preserve this receipt for returns.</p>
+                                <p>{appInfo?.receipt_header || 'Thank you for shopping with us!'}</p>
+                                <p>{appInfo?.invoice_terms || appInfo?.receipt_footer || 'Please preserve this receipt for returns.'}</p>
                                 <p className="font-mono mt-1 font-bold">*** {completedSale.invoice_number} ***</p>
                             </div>
                         </div>
@@ -2070,7 +2103,7 @@ export default function PosPage() {
                                 onClick={() => window.print()}
                                 className="flex-1 py-2.5 px-4 bg-primary hover:bg-primary-hover text-white rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                             >
-                                <i className="ti ti-printer" /> Print 80mm Slip
+                                <i className="ti ti-printer" /> Print {appInfo?.receipt_width || '80mm'} Invoice
                             </button>
                             <button
                                 type="button"
@@ -2120,7 +2153,7 @@ export default function PosPage() {
                                 {calcEquation || '\u00A0'}
                             </div>
                             <div className="flex items-baseline justify-between overflow-hidden">
-                                <span className="text-xs font-mono text-slate-500 font-bold">৳</span>
+                                <span className="text-xs font-mono text-slate-500 font-bold">{currencySymbol}</span>
                                 <div className="text-3xl font-black font-mono tracking-wider text-emerald-400 text-right truncate">
                                     {calcDisplay}
                                 </div>
@@ -2135,7 +2168,7 @@ export default function PosPage() {
                                 className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-primary border border-slate-700 transition-colors whitespace-nowrap cursor-pointer"
                                 title="Load current order total"
                             >
-                                Total (৳{grandTotal.toFixed(0)})
+                                Total ({currencySymbol}{grandTotal.toFixed(0)})
                             </button>
                             {[100, 500, 1000].map((amt) => (
                                 <button
@@ -2320,7 +2353,7 @@ export default function PosPage() {
                                 className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition-all cursor-pointer"
                             >
                                 <i className="ti ti-cash text-base" />
-                                <span>নগদ প্রদানে বসান (Apply ৳{calcDisplay} to Cash)</span>
+                                <span>নগদ প্রদানে বসান (Apply {currencySymbol}{calcDisplay} to Cash)</span>
                             </button>
                         </div>
                     </div>
